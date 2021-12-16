@@ -9,6 +9,16 @@ pluginManagement {
         kotlin("android") version getVersion("kotlinVer") apply false
         id("com.android.application") version getVersion("agpVer") apply false
     }
+
+    resolutionStrategy {
+        eachPlugin {
+            if(requested.id.id == "me.2bab.bundletool") {
+                // It will be replaced by a local module using `includeBuild` below,
+                // thus we just put a generic version (+) here.
+                useModule("me.2bab:bundle-tool-plugin:+")
+            }
+        }
+    }
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -25,3 +35,9 @@ dependencyResolutionManagement {
 }
 
 include(":app")
+includeBuild("bundle-tool-plugin"){
+    dependencySubstitution {
+        substitute(module("me.2bab:bundle-tool-plugin"))
+            .using(project(":plugin"))
+    }
+}

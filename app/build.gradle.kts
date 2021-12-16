@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     kotlin("android")
     id("poc")
+    id("me.2bab.bundletool")
 }
 
 android {
