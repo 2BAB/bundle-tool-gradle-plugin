@@ -1,8 +1,7 @@
 plugins {
     id("com.android.application")
     kotlin("android")
-
-    id("universal-apks")
+    id("poc")
 }
 
 android {
@@ -11,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "me.xx2bab.sample.bundle"
         minSdk = 28
-        targetSdk = 3
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
 

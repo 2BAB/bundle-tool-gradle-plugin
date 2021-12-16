@@ -1,2 +1,5 @@
 # bundle-tool-script-plugin
-A script plugin for extending Android bundle tool.
+
+A Gradle Plugin for Android BundleTool.
+
+
