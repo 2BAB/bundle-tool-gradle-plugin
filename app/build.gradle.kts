@@ -1,7 +1,9 @@
+import me.xx2bab.bundletool.*
+
 plugins {
     id("com.android.application")
     kotlin("android")
-    id("poc")
+//    id("poc")
     id("me.2bab.bundletool")
 }
 
@@ -86,4 +88,48 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.7.0")
     implementation("androidx.appcompat:appcompat:1.4.0")
+}
+
+
+// Main configuration of the bundle-tool-gradle-plugin.
+// Run `./gradlew TransformApksFromBundleForStagingDebug` for testing.
+bundleTool {
+    enableByVariant { variant -> variant.name.contains("debug", true) }
+    buildApks {
+        create("universal") {
+            this.buildMode.set(ApkBuildMode.UNIVERSAL.name)
+            this.deviceId.set("")
+        }
+    }
+}
+
+
+// If you need to extend bundle-tool-gradle-plugin with all transformed ".apks" files,
+// please leverage the `outputDirProperty` from BundleToolTask.
+// Run `./gradlew UploadApksForStagingDebug` for testing.
+androidComponents {
+    // Pls use the same rule as `enableByVariant{...}` over
+    onVariants(selector().withBuildType("debug")) { variant ->
+        afterEvaluate {
+            val taskProvider = (tasks.named("TransformApksFromBundleFor${variant.name.capitalize()}")
+                    as TaskProvider<BundleToolTask>)
+            val outputDirProperty = taskProvider.flatMap { it.outputDirProperty }
+            tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
+                this.outputDirProperty.set(outputDirProperty)
+            }
+        }
+    }
+}
+abstract class UploadTask: DefaultTask() {
+
+    @org.gradle.api.tasks.InputDirectory
+    val outputDirProperty: DirectoryProperty = project.objects.directoryProperty()
+
+    @org.gradle.api.tasks.TaskAction
+    fun upload() {
+        outputDirProperty.get().asFile.listFiles().forEach { artifact ->
+            logger.lifecycle("Upload bundle-tool outputs: ${artifact.absolutePath}")
+            // upload(artifact)
+        }
+    }
 }
