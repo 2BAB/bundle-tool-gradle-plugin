@@ -54,5 +54,5 @@ dependencies {
     testImplementation(deps.android.tools.sdkcommon)
     testImplementation(deps.android.tools.sdklib)
     testImplementation(deps.android.tools.bundletool)
-
+    testImplementation(deps.protobuf.java)
 }
