@@ -5,6 +5,12 @@ pluginManagement {
     val regexPlaceHolder = "%s\\s\\=\\s\\\"([A-Za-z0-9\\.\\-]+)\\\""
     val getVersion = { s: String -> regexPlaceHolder.format(s).toRegex().find(versions)!!.groupValues[1] }
 
+    repositories {
+        mavenCentral()
+        google()
+        gradlePluginPortal()
+    }
+
     plugins {
         kotlin("android") version getVersion("kotlinVer") apply false
         id("com.android.application") version getVersion("agpVer") apply false
@@ -21,7 +27,7 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+//    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()

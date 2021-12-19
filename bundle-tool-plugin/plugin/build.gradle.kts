@@ -37,6 +37,7 @@ dependencies {
     implementation(gradleApi())
 
     implementation(deps.kotlin.std)
+    implementation(deps.guava)
 
     compileOnly(deps.android.gradle.plugin)
     compileOnly(deps.android.tools.sdkcommon)

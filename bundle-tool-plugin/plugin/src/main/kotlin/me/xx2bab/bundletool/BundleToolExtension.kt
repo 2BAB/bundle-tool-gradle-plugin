@@ -3,8 +3,6 @@ package me.xx2bab.bundletool
 import com.android.build.api.variant.Variant
 import groovy.lang.Closure
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.model.ObjectFactory
-import javax.inject.Inject
 
 abstract class BundleToolExtension {
 
@@ -23,6 +21,8 @@ abstract class BundleToolExtension {
     }
 
     abstract val buildApks: NamedDomainObjectContainer<BuildApksRule>
+
+    abstract val getSize: NamedDomainObjectContainer<GetSizeRule>
 
     internal fun isFeatureEnabled(variant: Variant): Boolean = when {
         kotlinEnableByVariant != null -> {
@@ -49,4 +49,11 @@ enum class ApkBuildMode {
     SYSTEM,
     PERSISTENT,
     INSTANT
+}
+
+enum class GetSizeDimension {
+    SDK,
+    ABI,
+    SCREEN_DENSITY,
+    LANGUAGE,
 }

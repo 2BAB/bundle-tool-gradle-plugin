@@ -1,9 +1,12 @@
 package me.xx2bab.bundletool
 
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.build.bundletool.androidtools.Aapt2Command
 import com.android.tools.build.bundletool.commands.BuildApksCommand
+import com.android.tools.build.bundletool.commands.GetSizeCommand
+import com.android.tools.build.bundletool.model.GetSizeRequest
 import com.android.tools.build.bundletool.model.Password
 import com.android.tools.build.bundletool.model.SigningConfiguration
 import org.gradle.api.DefaultTask
@@ -17,6 +20,7 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.io.PrintStream
 import java.security.KeyStore
 import java.util.Optional
 import javax.inject.Inject
@@ -41,6 +45,9 @@ abstract class BundleToolTask : DefaultTask() {
     @get:Input
     var buildApksRules: NamedDomainObjectContainer<BuildApksRule>? = null
 
+    @get:Input
+    var getSizeRules: NamedDomainObjectContainer<GetSizeRule>? = null
+
     @get:OutputDirectory
     abstract val outputDirProperty: DirectoryProperty
 
@@ -52,7 +59,6 @@ abstract class BundleToolTask : DefaultTask() {
 
     @TaskAction
     fun transform() {
-
         val outDir = outputDirProperty.get().asFile
         val fileNameSuffix = "-${versionName.get()}"
 
@@ -67,9 +73,13 @@ abstract class BundleToolTask : DefaultTask() {
         val aapt2File = File(buildToolInfo.get().getPath(BuildToolInfo.PathId.AAPT2))
         val signature = signingConfigData.resolve()
 
-        // Iterate all rules and run BuildApksCommand in parallel using WorkerAction
+
+        // Iterate all rules and run commands in parallel using WorkerAction
         val workQueue: WorkQueue = workerExecutor.noIsolation()
-        buildApksRules?.asIterable()?.forEach { rule ->
+        val buildApksOutputs = mutableListOf<BuildApksOutput>()
+
+        // For BuildApksCommand
+        buildApksRules?.forEach { rule ->
             val outputApksFile = File(outDir, rule.name + fileNameSuffix + ".apks")
             workQueue.submit(BuildApksWorkAction::class.java) {
                 inputAab = inputAabFile
@@ -93,16 +103,55 @@ abstract class BundleToolTask : DefaultTask() {
                     null
                 }
                 deviceSpecFile =
-                    if (rule.deviceSpec.isPresent && rule.deviceSpec.get().isNotBlank()) {
-                        File(rule.deviceSpec.get())
+                    if (rule.deviceSpec.isPresent
+                        && rule.deviceSpec.get().absolutePath.isNotBlank()
+                        && rule.deviceSpec.get().extension == "json"
+                    ) {
+                        rule.deviceSpec.get()
                     } else {
                         null
                     }
+                buildApksOutputs.add(BuildApksOutput(this.outputApks, this.deviceSpecFile))
             }
         }
-    }
+        workQueue.await()
 
+        // For GetSizeCommand
+        buildApksOutputs.forEach { buildApksOutput ->
+            getSizeRules?.forEach { getSizeRule ->
+                workQueue.submit(GetSizeWorkAction::class.java) {
+                    inputApks = buildApksOutput.outputApks
+                    outputCsv =
+                        File(outDir, "${buildApksOutput.outputApks.nameWithoutExtension}-size.csv")
+                    deviceSpecFile = buildApksOutput.deviceSpecFile
+                    dimensions = if (getSizeRule.dimensions.isPresent
+                        && getSizeRule.dimensions.get().isNotEmpty()
+                    ) {
+                        getSizeRule.dimensions.get()
+                    } else {
+                        setOf()
+                    }
+                    isInstant = getSizeRule.instant.orNull
+                    modules = if (getSizeRule.modules.isPresent
+                        && getSizeRule.modules.get().isNotBlank()
+                    ) {
+                        getSizeRule.modules.get()
+                    } else {
+                        null
+                    }
+                }
+
+            }
+        }
+        workQueue.await()
+    }
 }
+
+
+private data class BuildApksOutput(
+    val outputApks: File,
+    val deviceSpecFile: File?
+)
 
 private interface BuildApksWorkParam : WorkParameters {
     // Mandatory
@@ -183,3 +232,45 @@ private abstract class BuildApksWorkAction : WorkAction<BuildApksWorkParam> {
 }
 
 
+private interface GetSizeWorkParam : WorkParameters {
+    // Mandatory
+    var inputApks: File
+    var outputCsv: File
+
+    // External
+    var deviceSpecFile: File?
+    var dimensions: Set<String>?
+    var isInstant: Boolean?
+    var modules: String?
+
+}
+
+private abstract class GetSizeWorkAction : WorkAction<GetSizeWorkParam> {
+
+    override fun execute() {
+        val getSizeCommandBuilder = GetSizeCommand.builder().apply {
+            setApksArchivePath(parameters.inputApks.toPath())
+            setGetSizeSubCommand(GetSizeCommand.GetSizeSubcommand.TOTAL)
+
+            parameters.deviceSpecFile?.let { setDeviceSpec(it.toPath()) }
+            parameters.dimensions?.let { safeDimens ->
+                val set = safeDimens.map { dimen ->
+                    GetSizeRequest.Dimension.valueOf(dimen.trim())
+                }
+                    .toImmutableSet()
+                setDimensions(set)
+            }
+            parameters.modules?.let { safeModules ->
+                val set = safeModules.split(",")
+                    .map { it.trim() }
+                    .toImmutableSet()
+                setModules(set)
+            }
+            parameters.isInstant?.let { setInstant(it) }
+        }
+        parameters.outputCsv.createNewFile()
+        getSizeCommandBuilder.build()
+            .getSizeTotal(PrintStream(parameters.outputCsv.outputStream()))
+    }
+
+}

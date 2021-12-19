@@ -19,12 +19,22 @@ class BundleToolPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val config = project.extensions.create<BundleToolExtension>("bundleTool").apply {
             buildApks.whenObjectAdded {
-                overwriteOutput.set(false)
-                connectedDevice.set(false)
-                localTestingMode.set(false)
-                buildMode.set("")
-                deviceId.set("")
-                deviceSpec.set("")
+                overwriteOutput.convention(false)
+                connectedDevice.convention(false)
+                localTestingMode.convention(false)
+                buildMode.convention("")
+                deviceId.convention("")
+                deviceSpec.convention(File(""))
+            }
+            getSize.whenObjectAdded {
+                dimensions.convention(setOf(
+                    GetSizeDimension.SDK.name,
+                    GetSizeDimension.ABI.name,
+                    GetSizeDimension.SCREEN_DENSITY.name,
+                    GetSizeDimension.LANGUAGE.name
+                ))
+                modules.convention("")
+                instant.convention(false)
             }
         }
         val androidExtension = project.extensions.getByType<ApplicationAndroidComponentsExtension>()
@@ -48,6 +58,7 @@ class BundleToolPlugin : Plugin<Project> {
                     variant.toApkCreationConfigImpl().config
                 )
                 buildApksRules = config.buildApks
+                getSizeRules = config.getSize
                 outputDirProperty.fileProvider(
                     finalBundle.map { File(it.asFile.parentFile, "bundletool") }
                 )

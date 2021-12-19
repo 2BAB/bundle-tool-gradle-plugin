@@ -35,7 +35,7 @@ class BundleToolCommanderTest {
             outputBundle = File(tempDir, "out.apks").also { it.createNewFile() }
             aapt2File = File(tempDir, "aapt2").also { it.createNewFile() }
             adbFile = File(tempDir, "adb").also { it.createNewFile() }
-            specJsonFile = File(javaClass.classLoader.getResource("pixel4.json")!!.file)
+            specJsonFile = File(javaClass.classLoader.getResource("pixel4a.json")!!.file)
         }
     }
 

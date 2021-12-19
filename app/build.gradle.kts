@@ -1,4 +1,5 @@
 import me.xx2bab.bundletool.*
+import me.xx2bab.bundletool.BundleToolExtension
 
 plugins {
     id("com.android.application")
@@ -95,10 +96,23 @@ dependencies {
 // Run `./gradlew TransformApksFromBundleForStagingDebug` for testing.
 bundleTool {
     enableByVariant { variant -> variant.name.contains("debug", true) }
+
     buildApks {
         create("universal") {
-            this.buildMode.set(ApkBuildMode.UNIVERSAL.name)
-            this.deviceId.set("")
+            buildMode.set(ApkBuildMode.UNIVERSAL.name)
+        }
+        create("pixel4a") {
+            deviceSpec.set(file("./pixel4a.json"))
+        }
+    }
+
+    getSize {
+        create("all") {
+            dimensions.addAll(
+                GetSizeDimension.SDK.name,
+                GetSizeDimension.ABI.name,
+                GetSizeDimension.SCREEN_DENSITY.name,
+                GetSizeDimension.LANGUAGE.name)
         }
     }
 }
