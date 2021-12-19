@@ -1,0 +1,1 @@
+./gradlew clean :bundle-tool-plugin:plugin:assemble :bundle-tool-plugin:plugin:publishToMavenLocal

@@ -37,7 +37,7 @@ fun getExtraString(name: String) = ext[name]?.toString()
 
 val groupName = "me.2bab"
 val projectName = "bundle-tool-plugin"
-val mavenDesc = "A Gradle Plugin to resolve AndroidManifest.xml merge conflicts."
+val mavenDesc = "A Gradle Plugin for Android BundleTool."
 val baseUrl = "https://github.com/2BAB/bundle-tool-gradle-plugin"
 val siteUrl = baseUrl
 val gitUrl = "$baseUrl.git"
@@ -54,7 +54,7 @@ val username = "2BAB"
 publishing {
 
     publications {
-        create<MavenPublication>("SPPlugin") {
+        create<MavenPublication>("BTPlugin") {
             artifact(javadocJar.get())
             from(components["java"])
             pom {
