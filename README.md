@@ -1,5 +1,7 @@
 <img src="./banner.png" alt="bundle tool gradle plugin" width="771px">
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/me.2bab/bundle-tool-plugin/badge.svg)](https://search.maven.org/artifact/me.2bab/bundle-tool-plugin)
+[![Actions Status](https://github.com/2bab/bundle-tool-gradle-plugin/workflows/CI/badge.svg)](https://github.com/2bab/bundle-tool-gradle-plugin/actions)
 [![Apache 2](https://img.shields.io/badge/License-Apache%202-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 A Gradle Plugin for Android BundleTool.
@@ -24,7 +26,7 @@ buildscript {
 **0x02. Apply Plugin:**
 
 ``` kotlin
-// For you application module
+// For your application module
 plugins {
     id("me.2bab.bundletool")
 }
@@ -35,7 +37,8 @@ plugins {
 ``` kotlin
 bundleTool {
     enableByVariant { variant -> variant.name.contains("debug", true) }
-
+    
+    // Each of them will create a work action with `build-apks` command
     buildApks {
         create("universal") {
             buildMode.set(ApkBuildMode.UNIVERSAL.name)
@@ -45,6 +48,7 @@ bundleTool {
         }
     }
 
+    // Each of them will create a work action for above "buildApks" list items' output
     getSize {
         create("all") {
             dimensions.addAll(
@@ -60,6 +64,8 @@ bundleTool {
 **0x04. Build your App and Enjoy!**
 
 ```shell
+# Please check "enableByVariant" config to ensure you are running the one
+# that enabled bundle-tool-plugin already.
 ./gradlew TransformApksFromBundleForStagingDebug
 ```
 
