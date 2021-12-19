@@ -41,7 +41,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ github.job }}-
       - run: |
-          ./gradlew assembleFullDebug
+          ./gradlew assembleStagingDebug
   checks:
     name: Checks (unit tests and static analysis, TODO:add detekt check after set it up)
     runs-on: ubuntu-latest
