@@ -39,9 +39,10 @@ class BundleToolPlugin : Plugin<Project> {
         }
         val androidExtension = project.extensions.getByType<ApplicationAndroidComponentsExtension>()
         androidExtension.onVariants { variant ->
-            if (!config.isFeatureEnabled(variant)) {
+            if (!config.isFeatureEnabled(variant, BundleToolFeature.BUILD_APKS)) {
                 return@onVariants
             }
+            val featureGetSize = config.isFeatureEnabled(variant, BundleToolFeature.GET_SIZE)
             val polyfill = ApplicationVariantPolyfill(project, variant)
             val versionName = variant.outputs[0].versionName
             val variantName = variant.name.capitalize(Locale.ROOT)
@@ -50,6 +51,7 @@ class BundleToolPlugin : Plugin<Project> {
             val buildApksTaskProvider = project.tasks.register<BundleToolTask>(
                 "TransformApksFromBundleFor${variantName}"
             ) {
+                enableGetSizeFeature = featureGetSize
                 projectName.set(project.name)
                 this.variantName.set(variantName)
                 this.versionName.set(versionName)

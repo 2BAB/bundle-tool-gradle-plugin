@@ -1,5 +1,4 @@
 import me.xx2bab.bundletool.*
-import me.xx2bab.bundletool.BundleToolExtension
 
 plugins {
     id("com.android.application")
@@ -93,9 +92,12 @@ dependencies {
 
 
 // Main configuration of the bundle-tool-gradle-plugin.
-// Run `./gradlew TransformApksFromBundleForStagingDebug` for testing.
+// Run `./gradlew TransformApksFromBundleForProductionRelease` for testing all features.
 bundleTool {
-    enableByVariant { variant -> variant.name.contains("debug", true) }
+    // "debug" variant will not enable BundleToolFeature.GET_SIZE feature
+    enableByVariant { variant, feature ->
+        !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
+    }
 
     buildApks {
         create("universal") {
@@ -112,7 +114,8 @@ bundleTool {
                 GetSizeDimension.SDK.name,
                 GetSizeDimension.ABI.name,
                 GetSizeDimension.SCREEN_DENSITY.name,
-                GetSizeDimension.LANGUAGE.name)
+                GetSizeDimension.LANGUAGE.name
+            )
         }
     }
 }

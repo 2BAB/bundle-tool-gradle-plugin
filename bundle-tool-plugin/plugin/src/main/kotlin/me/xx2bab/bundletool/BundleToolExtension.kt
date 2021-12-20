@@ -1,43 +1,27 @@
 package me.xx2bab.bundletool
 
-import com.android.build.api.variant.Variant
-import groovy.lang.Closure
 import org.gradle.api.NamedDomainObjectContainer
 
-abstract class BundleToolExtension {
-
-    var kotlinEnableByVariant: EnableByVariant? = null
-
-    var groovyEnableByVariant: Closure<Boolean>? = null
-
-    // For Gradle Kotlin DSL
-    fun enableByVariant(selector: EnableByVariant) {
-        kotlinEnableByVariant = selector
-    }
-
-    // For Gradle Groovy DSL
-    fun enableByVariant(selector: Closure<Boolean>) {
-        groovyEnableByVariant = selector.dehydrate()
-    }
+abstract class BundleToolExtension: EnableByFeatureExtension<BundleToolFeature>() {
 
     abstract val buildApks: NamedDomainObjectContainer<BuildApksRule>
 
     abstract val getSize: NamedDomainObjectContainer<GetSizeRule>
 
-    internal fun isFeatureEnabled(variant: Variant): Boolean = when {
-        kotlinEnableByVariant != null -> {
-            kotlinEnableByVariant!!.invoke(variant)
-        }
-        groovyEnableByVariant != null -> {
-            groovyEnableByVariant!!.call(variant)
-        }
-        else -> false
-    }
-
-
 }
 
-internal typealias EnableByVariant = (variant: Variant) -> Boolean
+enum class BundleToolFeature {
+
+    // It's currently a predecessor for GET_SIZE,
+    // and the first job that plugin does,
+    // disable it will cause the task registry got removed.
+    // The work action that transforms .aab to .apks using `build-apks` command.
+    BUILD_APKS,
+
+    // The work action that gets the transformed .apks file size using `get-size total` command.
+    GET_SIZE
+
+}
 
 /**
  * A copy of [com.android.tools.build.bundletool.commands.BuildApksCommand.ApkBuildMode],
@@ -51,6 +35,10 @@ enum class ApkBuildMode {
     INSTANT
 }
 
+/**
+ * A copy of [com.android.tools.build.bundletool.model.GetSizeRequest.Dimension],
+ * so that users can directly use enums below instead of add BundleTool as dependency for build.gradle(.kts).
+ */
 enum class GetSizeDimension {
     SDK,
     ABI,

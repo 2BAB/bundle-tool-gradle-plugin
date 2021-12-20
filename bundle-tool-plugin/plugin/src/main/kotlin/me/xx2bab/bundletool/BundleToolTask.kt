@@ -27,6 +27,12 @@ import javax.inject.Inject
 
 abstract class BundleToolTask : DefaultTask() {
 
+//    @get:Input
+//    abstract val enableBuildApksFeature: Boolean
+
+    @get:Input
+    var enableGetSizeFeature: Boolean = false
+
     @get:Input
     abstract val projectName: Property<String>
 
@@ -117,6 +123,7 @@ abstract class BundleToolTask : DefaultTask() {
         workQueue.await()
 
         // For GetSizeCommand
+        if (!enableGetSizeFeature) return
         buildApksOutputs.forEach { buildApksOutput ->
             getSizeRules?.forEach { getSizeRule ->
                 workQueue.submit(GetSizeWorkAction::class.java) {
