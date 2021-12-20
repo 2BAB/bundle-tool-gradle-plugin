@@ -207,6 +207,21 @@ private abstract class BuildApksWorkAction : WorkAction<BuildApksWorkParam> {
             parameters.deviceSpecFile?.let { setDeviceSpec(it.toPath()) }
         }
         commandBuilder.build().execute()
+
+        // Special case for extracting universal apk from apks
+        if (parameters.buildMode != null
+            && parameters.buildMode == ApkBuildMode.UNIVERSAL.name
+        ) {
+            val universalApk = File(
+                parameters.outputApks.parentFile,
+                parameters.outputApks.name.dropLast(1)
+            )
+            extractFileByExtensionFromZip(
+                parameters.outputApks,
+                "apk",
+                universalApk
+            )
+        }
     }
 
 
