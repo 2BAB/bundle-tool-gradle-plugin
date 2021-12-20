@@ -29,7 +29,7 @@ val token: String = if (!tokenFromEnv.isNullOrBlank()) {
 
 val repo = "bundle-tool-gradle-plugin"
 val tagBranch = "main"
-val version = project.version.toString()
+val version = BuildConfig.Versions.pluginVersion
 val releaseNotes = ""
 createGithubReleaseTaskInternal(artifacts, token, repo, tagBranch, version, releaseNotes)
 
@@ -40,14 +40,13 @@ fun createGithubReleaseTaskInternal(artifacts: DirectoryProperty,
                                     tagBranch: String,
                                     version: String,
                                     releaseNotes: String): TaskProvider<GithubReleaseTask> {
-//    val id = version.replace(".", "")
     return project.tasks.register<GithubReleaseTask>("releaseArtifactsToGithub") {
         setAuthorization("Token $token")
         setOwner("2bab")
         setRepo(repo)
         setTagName(version)
         setTargetCommitish(tagBranch)
-        setReleaseName("v${version}")
+        setReleaseName(version)
         setBody(releaseNotes)
         setDraft(false)
         setPrerelease(false)
