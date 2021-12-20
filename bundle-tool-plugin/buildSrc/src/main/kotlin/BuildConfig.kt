@@ -1,7 +1,7 @@
 object BuildConfig {
 
     object Versions {
-        const val pluginVersion = "1.0.0"
+        const val pluginVersion = "1.1.0"
     }
 
 }
