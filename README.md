@@ -4,7 +4,10 @@
 [![Actions Status](https://github.com/2bab/bundle-tool-gradle-plugin/workflows/CI/badge.svg)](https://github.com/2bab/bundle-tool-gradle-plugin/actions)
 [![Apache 2](https://img.shields.io/badge/License-Apache%202-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-A Gradle Plugin for Android BundleTool.
+A Gradle Plugin for Android BundleTool. It supports:
+
+1. Generate **".apks"** artifacts by `build-apks` command (When running in universal build mode, it also extracts universal **".apk"** artifact.)
+2. Calculate **".apks"** size by `get-size total` command and export to **".csv"** files.
 
 ## Usage
 
@@ -17,8 +20,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
-        classpath 'me.2bab:bundle-tool-plugin:1.0.0'
+        classpath("com.android.tools.build:gradle:7.0.4")
+        classpath("me.2bab:bundle-tool-plugin:1.1.0")
     }
 }
 ```
@@ -35,8 +38,14 @@ plugins {
 **0x03. Advanced Configurations**
 
 ``` kotlin
+import me.xx2bab.bundletool.*
+
 bundleTool {
-    enableByVariant { variant -> variant.name.contains("debug", true) }
+    // The plugin can be enabled by variant, for instance,
+    // BundleToolFeature.GET_SIZE feature is only enabled for "debug" variant.
+    enableByVariant { variant, feature ->
+        !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
+    }
     
     // Each of them will create a work action with `build-apks` command
     buildApks {
@@ -65,10 +74,10 @@ bundleTool {
 
 ```shell
 # Please check "enableByVariant" config to ensure you are running the one
-# that enabled bundle-tool-plugin already.
-./gradlew TransformApksFromBundleForStagingDebug
+# that enabled features you want already.
+./gradlew TransformApksFromBundleForProductionRelease
 ```
-
+![](./transform_result.png)
 
 ## Compatible
 
@@ -76,7 +85,7 @@ bundle-tool-gradle-plugin is only supported & tested on LATEST 2 Minor versions 
 
 | AGP   | BundleTool | bundle-tool-gradle-plugin |
 |-------|------------|---------------------------|
-| 7.0.x | 1.6.0      | 1.0.0                     |
+| 7.0.x | 1.6.0      | 1.1.0                     |
 
 ## Git Commit Check
 
