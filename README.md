@@ -4,10 +4,12 @@
 [![Actions Status](https://github.com/2bab/bundle-tool-gradle-plugin/workflows/CI/badge.svg)](https://github.com/2bab/bundle-tool-gradle-plugin/actions)
 [![Apache 2](https://img.shields.io/badge/License-Apache%202-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-A Gradle Plugin for Android BundleTool. It supports:
+A Gradle Plugin for Android BundleTool, powered by [Polyfill](https://github.com/2BAB/Polyfill). It supports:
 
-1. Generate **".apks"** artifacts by `build-apks` command (When running in universal build mode, it also extracts universal **".apk"** artifact.)
+1. Generate **".apks"** artifacts by `build-apks` command.
 2. Calculate **".apks"** size by `get-size total` command and export to **".csv"** files.
+3. When running `build-apks` command in Universal build mode, it also extracts universal **".apk"** artifact.
+4. The plugin features can be enabled/disabled for per variant respectively.
 
 ## Usage
 
@@ -42,7 +44,8 @@ import me.xx2bab.bundletool.*
 
 bundleTool {
     // The plugin can be enabled by variant, for instance,
-    // BundleToolFeature.GET_SIZE feature is only enabled for "debug" variant.
+    // BundleToolFeature.GET_SIZE feature is disabled for "debug" buildTypes,
+    // while other combinations are supported/enabled.
     enableByVariant { variant, feature ->
         !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
     }

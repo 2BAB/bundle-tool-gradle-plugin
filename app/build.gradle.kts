@@ -95,7 +95,8 @@ dependencies {
 // Run `./gradlew TransformApksFromBundleForProductionRelease` for testing all features.
 bundleTool {
     // The plugin can be enabled by variant, for instance,
-    // BundleToolFeature.GET_SIZE feature is only enabled for "debug" variant.
+    // BundleToolFeature.GET_SIZE feature is disabled for "debug" buildTypes,
+    // while other combinations are supported/enabled.
     enableByVariant { variant, feature ->
         !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
     }
