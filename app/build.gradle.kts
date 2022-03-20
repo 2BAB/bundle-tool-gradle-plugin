@@ -128,25 +128,21 @@ bundleTool {
 androidComponents {
     // Pls use the same rule as `enableByVariant{...}` over
     onVariants(selector().withBuildType("debug")) { variant ->
-        afterEvaluate {
-            val taskProvider = (tasks.named("TransformApksFromBundleFor${variant.name.capitalize()}")
-                    as TaskProvider<BundleToolTask>)
-            val outputDirProperty = taskProvider.flatMap { it.outputDirProperty }
-            tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
-                this.outputDirProperty.set(outputDirProperty)
-            }
+        tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
+            this.outputDirProperty.set(variant.getBundleToApksOutputDir())
         }
     }
 }
-abstract class UploadTask: DefaultTask() {
 
-    @org.gradle.api.tasks.InputDirectory
-    val outputDirProperty: DirectoryProperty = project.objects.directoryProperty()
+abstract class UploadTask : DefaultTask() {
+
+    @get:org.gradle.api.tasks.InputDirectory
+    abstract val outputDirProperty: DirectoryProperty
 
     @org.gradle.api.tasks.TaskAction
     fun upload() {
         outputDirProperty.get().asFile.listFiles().forEach { artifact ->
-            logger.lifecycle("Upload bundle-tool outputs: ${artifact.absolutePath}")
+            logger.lifecycle("Uploading bundle-tool outputs: ${artifact.absolutePath}")
             // upload(artifact)
         }
     }
