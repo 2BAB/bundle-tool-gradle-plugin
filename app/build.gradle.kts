@@ -3,7 +3,6 @@ import me.xx2bab.bundletool.*
 plugins {
     id("com.android.application")
     kotlin("android")
-//    id("poc")
     id("me.2bab.bundletool")
 }
 
