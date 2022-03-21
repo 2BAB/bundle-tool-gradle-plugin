@@ -110,13 +110,15 @@ bundleTool {
         }
     }
 
+    // Each of them will create a work action with `build-apks` command
     buildApks {
         create("universal") {
             buildMode.set(ApkBuildMode.UNIVERSAL.name)
         }
         create("pixel4a") {
             deviceSpec.set(file("./pixel4a.json"))
-            // `deviceId` will be used for INSTALL_APKS feature only
+            // `deviceId` will be used for INSTALL_APKS feature only,
+            // set the `deviceId` to indicate that you want to install the apks after built
             deviceId.set(prop["pixel4a.id"].toString())
         }
         create("pixel6") {
@@ -124,6 +126,7 @@ bundleTool {
         }
     }
 
+    // Each of them will create a work action for above "buildApks" list items' output
     getSize {
         create("all") {
             dimensions.addAll(
@@ -137,8 +140,6 @@ bundleTool {
 }
 
 
-// If you need to extend bundle-tool-gradle-plugin with all transformed ".apks" files,
-// please leverage the `outputDirProperty` from BundleToolTask.
 // Run `./gradlew UploadApksForStagingDebug` for testing.
 androidComponents {
     // Pls use the same rule as `enableByVariant{...}` over
