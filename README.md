@@ -137,7 +137,7 @@ bundle-tool-gradle-plugin is only supported & tested on LATEST 2 Minor versions 
 
 | AGP   | BundleTool | bundle-tool-gradle-plugin |
 |-------|------------|---------------------------|
-| 7.1.x | 1.6.1      | 1.2.0                     |
+| 7.1.x | 1.8.0      | 1.2.0                     |
 | 7.0.x | 1.6.0      | 1.1.0                     |
 
 ## Git Commit Check

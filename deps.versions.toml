@@ -10,7 +10,7 @@ polyfillVer = "0.5.0"
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agpVer" }
 android-tools-sdkcommon = { module = "com.android.tools:sdk-common", version.ref = "androidToolVer" }
 android-tools-sdklib = { module = "com.android.tools:sdklib", version.ref = "androidToolVer" }
-android-tools-bundletool = { module = "com.android.tools.build:bundletool", version = "1.6.0" }
+android-tools-bundletool = { module = "com.android.tools.build:bundletool", version = "1.8.0" }
 kotlin-std = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlinVer" }
 guava = { module = "com.google.guava:guava", version = "30.1-jre" }
 polyfill-main = { module = "me.2bab:polyfill", version.ref = "polyfillVer" }
