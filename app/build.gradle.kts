@@ -89,7 +89,13 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.0")
 }
 
-val prop = Properties().apply { load(FileInputStream(File(rootProject.rootDir, "local.properties"))) }
+val pixel4aId = if (project.file("../local.properties").exists()) {
+    val p = Properties().apply { load(FileInputStream(project.file("../local.properties"))) }
+    p["pixel4a.id"].toString()
+} else {
+    ""
+}
+
 
 // Main configuration of the bundle-tool-gradle-plugin.
 // Run `./gradlew TransformApksFromBundleForStagingDebug` for testing all features.
@@ -119,7 +125,7 @@ bundleTool {
             deviceSpec.set(file("./pixel4a.json"))
             // `deviceId` will be used for INSTALL_APKS feature only,
             // set the `deviceId` to indicate that you want to install the apks after built
-            deviceId.set(prop["pixel4a.id"].toString())
+            deviceId.set(pixel4aId)
         }
         create("pixel6") {
             deviceSpec.set(file("./pixel6.json"))

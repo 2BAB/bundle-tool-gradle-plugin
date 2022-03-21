@@ -69,7 +69,7 @@ bundleTool {
             deviceSpec.set(file("./pixel4a.json"))
             // `deviceId` will be used for INSTALL_APKS feature only,
             // set the `deviceId` to indicate that you want to install the apks after built
-            deviceId.set(prop["pixel4a.id"].toString())
+            deviceId.set(pixel4aId)
         }
         create("pixel6") {
             deviceSpec.set(file("./pixel6.json"))
