@@ -49,12 +49,10 @@ android {
         create("staging") {
             dimension = "server"
             applicationIdSuffix = ".staging"
-            versionNameSuffix = "-staging"
         }
         create("production") {
             dimension = "server"
             applicationIdSuffix = ".production"
-            versionNameSuffix = "-production"
             versionCode = 2
         }
     }

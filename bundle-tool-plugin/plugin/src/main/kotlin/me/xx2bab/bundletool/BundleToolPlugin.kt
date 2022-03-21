@@ -64,7 +64,7 @@ class BundleToolPlugin : Plugin<Project> {
                 enableGetSizeFeature = featureGetSize
                 enableInstallApksFeature = featureInstallApks
                 projectName.set(project.name)
-                this.variantName.set(variantName)
+                this.variantName.set(variant.name.toLowerCase(Locale.ROOT))
                 this.versionName.set(versionName)
                 finalBundleProperty.set(finalBundle)
                 signingConfigData = SigningConfigDataProvider.create(
@@ -75,7 +75,8 @@ class BundleToolPlugin : Plugin<Project> {
                 buildToolInfo.set(variant.getBuildToolInfo())
                 adbFileProvider.set(androidExtension.sdkComponents.adb)
                 outputDirProperty.fileProvider(finalBundle.map {
-                    File(it.asFile.parentFile, "bundletool")
+                    val dirName = it.asFile.parentFile.name + "-bundletool"
+                    File(it.asFile.parentFile.parentFile, dirName)
                 })
             }
             variant.getExtension(BundleToolVariantExtension::class.java)!!
