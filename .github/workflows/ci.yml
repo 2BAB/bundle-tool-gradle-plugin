@@ -66,31 +66,31 @@ jobs:
             ${{ runner.os }}-${{ github.job }}-
       - run: |
           ./gradlew :bundle-tool-plugin:plugin:test
-  functional-tests:
-    name: Functional tests
-    runs-on: ubuntu-latest
-    env:
-      JAVA_TOOL_OPTIONS: -Xmx4g
-      AGP_VERSION: ${{ matrix.agp-version }}
-    strategy:
-      matrix:
-        agp-version: [ 7.1.2 ]
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: gradle/wrapper-validation-action@v1
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ github.job }}-${{ matrix.agp-version }}-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ github.job }}-${{ matrix.agp-version }}-
-      - run: |
-          ./gradlew :bundle-tool-plugin:plugin:functionalTest
+#  functional-tests:
+#    name: Functional tests
+#    runs-on: ubuntu-latest
+#    env:
+#      JAVA_TOOL_OPTIONS: -Xmx4g
+#      AGP_VERSION: ${{ matrix.agp-version }}
+#    strategy:
+#      matrix:
+#        agp-version: [ 7.1.2 ]
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: gradle/wrapper-validation-action@v1
+#      - name: Set up JDK 11
+#        uses: actions/setup-java@v2
+#        with:
+#          distribution: 'zulu'
+#          java-version: '11'
+#      - uses: actions/cache@v2
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: ${{ runner.os }}-${{ github.job }}-${{ matrix.agp-version }}-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+#          restore-keys: |
+#            ${{ runner.os }}-${{ github.job }}-${{ matrix.agp-version }}-
+#      - run: |
+#          ./gradlew :bundle-tool-plugin:plugin:functionalTest
