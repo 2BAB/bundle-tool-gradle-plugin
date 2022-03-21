@@ -2,8 +2,6 @@ package me.xx2bab.bundletool
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.*
-import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import me.xx2bab.polyfill.getApplicationVariantImpl
 import me.xx2bab.polyfill.getBuildToolInfo
@@ -23,7 +21,7 @@ class BundleToolPlugin : Plugin<Project> {
         val config = project.extensions.create<BundleToolExtension>("bundleTool").apply {
             buildApks.whenObjectAdded {
                 overwriteOutput.convention(false)
-                connectedDevice.convention(false)
+//                connectedDevice.convention(false)
                 localTestingMode.convention(false)
                 buildMode.convention("")
                 deviceId.convention("")
@@ -55,6 +53,7 @@ class BundleToolPlugin : Plugin<Project> {
                 return@onVariants
             }
             val featureGetSize = config.isFeatureEnabled(variant, BundleToolFeature.GET_SIZE)
+            val featureInstallApks = config.isFeatureEnabled(variant, BundleToolFeature.INSTALL_APKS)
             val versionName = variant.outputs[0].versionName
             val variantName = variant.name.capitalize(Locale.ROOT)
             val finalBundle = variant.artifacts.get(SingleArtifact.BUNDLE)
@@ -63,6 +62,7 @@ class BundleToolPlugin : Plugin<Project> {
                 "TransformApksFromBundleFor${variantName}"
             ) {
                 enableGetSizeFeature = featureGetSize
+                enableInstallApksFeature = featureInstallApks
                 projectName.set(project.name)
                 this.variantName.set(variantName)
                 this.versionName.set(versionName)
@@ -73,7 +73,7 @@ class BundleToolPlugin : Plugin<Project> {
                 buildApksRules = config.buildApks
                 getSizeRules = config.getSize
                 buildToolInfo.set(variant.getBuildToolInfo())
-
+                adbFileProvider.set(androidExtension.sdkComponents.adb)
                 outputDirProperty.fileProvider(finalBundle.map {
                     File(it.asFile.parentFile, "bundletool")
                 })

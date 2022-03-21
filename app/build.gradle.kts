@@ -1,4 +1,6 @@
 import me.xx2bab.bundletool.*
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -89,15 +91,25 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.0")
 }
 
+val prop = Properties().apply { load(FileInputStream(File(rootProject.rootDir, "local.properties"))) }
 
 // Main configuration of the bundle-tool-gradle-plugin.
-// Run `./gradlew TransformApksFromBundleForProductionRelease` for testing all features.
+// Run `./gradlew TransformApksFromBundleForStagingDebug` for testing all features.
 bundleTool {
     // The plugin can be enabled by variant, for instance,
-    // BundleToolFeature.GET_SIZE feature is disabled for "debug" buildTypes,
+    // BundleToolFeature.GET_SIZE feature is disabled for "productionDebug" buildTypes,
+    // BundleToolFeature.INSTALL_APKS feature is enabled for "debug" buildTypes only,
     // while other combinations are supported/enabled.
     enableByVariant { variant, feature ->
-        !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
+        when(feature) {
+            BundleToolFeature.GET_SIZE -> {
+                !(variant.buildType == "debug" && variant.flavorName == "production")
+            }
+            BundleToolFeature.INSTALL_APKS -> {
+                variant.buildType == "debug"
+            }
+            else -> true
+        }
     }
 
     buildApks {
@@ -106,6 +118,11 @@ bundleTool {
         }
         create("pixel4a") {
             deviceSpec.set(file("./pixel4a.json"))
+            // `deviceId` will be used for INSTALL_APKS feature only
+            deviceId.set(prop["pixel4a.id"].toString())
+        }
+        create("pixel6") {
+            deviceSpec.set(file("./pixel6.json"))
         }
     }
 
