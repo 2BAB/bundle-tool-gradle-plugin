@@ -75,7 +75,7 @@ abstract class BundleToolTask : DefaultTask() {
         val fileNameSuffix = "-${variantName.get()}-${versionName.get()}"
 
         // Put a copy of final aab to our /bundletool directory
-        val inputAabFile = File(outDir, "${projectName.get()}-final-bundle-$fileNameSuffix.aab")
+        val inputAabFile = File(outDir, "${projectName.get()}-final-bundle$fileNameSuffix.aab")
         if (inputAabFile.exists()) {
             inputAabFile.delete()
         }
