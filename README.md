@@ -22,8 +22,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.0.4")
-        classpath("me.2bab:bundle-tool-plugin:1.1.0")
+        classpath("com.android.tools.build:gradle:7.1.2")
+        classpath("me.2bab:bundle-tool-plugin:1.2.0")
     }
 }
 ```
@@ -42,14 +42,24 @@ plugins {
 ``` kotlin
 import me.xx2bab.bundletool.*
 
+// Run `./gradlew TransformApksFromBundleForStagingDebug` for testing all features.
 bundleTool {
     // The plugin can be enabled by variant, for instance,
-    // BundleToolFeature.GET_SIZE feature is disabled for "debug" buildTypes,
+    // BundleToolFeature.GET_SIZE feature is disabled for "productionDebug" buildTypes,
+    // BundleToolFeature.INSTALL_APKS feature is enabled for "debug" buildTypes only,
     // while other combinations are supported/enabled.
     enableByVariant { variant, feature ->
-        !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
+        when(feature) {
+            BundleToolFeature.GET_SIZE -> {
+                !(variant.buildType == "debug" && variant.flavorName == "production")
+            }
+            BundleToolFeature.INSTALL_APKS -> {
+                variant.buildType == "debug"
+            }
+            else -> true
+        }
     }
-    
+
     // Each of them will create a work action with `build-apks` command
     buildApks {
         create("universal") {
@@ -57,9 +67,15 @@ bundleTool {
         }
         create("pixel4a") {
             deviceSpec.set(file("./pixel4a.json"))
+            // `deviceId` will be used for INSTALL_APKS feature only,
+            // set the `deviceId` to indicate that you want to install the apks after built
+            deviceId.set(pixel4aId)
+        }
+        create("pixel6") {
+            deviceSpec.set(file("./pixel6.json"))
         }
     }
-
+    
     // Each of them will create a work action for above "buildApks" list items' output
     getSize {
         create("all") {
@@ -67,7 +83,8 @@ bundleTool {
                 GetSizeDimension.SDK.name,
                 GetSizeDimension.ABI.name,
                 GetSizeDimension.SCREEN_DENSITY.name,
-                GetSizeDimension.LANGUAGE.name)
+                GetSizeDimension.LANGUAGE.name
+            )
         }
     }
 }
@@ -78,9 +95,41 @@ bundleTool {
 ```shell
 # Please check "enableByVariant" config to ensure you are running the one
 # that enabled features you want already.
-./gradlew TransformApksFromBundleForProductionRelease
+./gradlew TransformApksFromBundleForStagingDebug
 ```
 ![](./transform_result.png)
+
+**0x05. Extend the build flow. (Optional)**
+
+If you would like to do something after bundletool's execution, "to upload all those products" for example. This plugin provides the output directory `Provider` for other developers to use, check the sample below:
+
+```kotlin
+// Run `./gradlew UploadApksForStagingDebug` for testing.
+androidComponents {
+    // Pls use the same rule as `enableByVariant{...}` over
+    onVariants(selector().withBuildType("debug")) { variant ->
+        tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
+            // You must apply the "me.2bab.bundletool" in the build script
+            // or in your plugin before calling `variant.getBundleToApksOutputDir()`.  
+            this.outputDirProperty.set(variant.getBundleToApksOutputDir())
+        }
+    }
+}
+
+abstract class UploadTask : DefaultTask() {
+
+    @get:org.gradle.api.tasks.InputDirectory
+    abstract val outputDirProperty: DirectoryProperty
+
+    @org.gradle.api.tasks.TaskAction
+    fun upload() {
+        outputDirProperty.get().asFile.listFiles().forEach { artifact ->
+            logger.lifecycle("Uploading bundle-tool outputs: ${artifact.absolutePath}")
+            // upload(artifact)
+        }
+    }
+}
+```
 
 ## Compatible
 
@@ -88,6 +137,7 @@ bundle-tool-gradle-plugin is only supported & tested on LATEST 2 Minor versions 
 
 | AGP   | BundleTool | bundle-tool-gradle-plugin |
 |-------|------------|---------------------------|
+| 7.1.x | 1.8.0      | 1.2.0                     |
 | 7.0.x | 1.6.0      | 1.1.0                     |
 
 ## Git Commit Check

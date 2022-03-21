@@ -1,9 +1,10 @@
 import me.xx2bab.bundletool.*
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
     kotlin("android")
-//    id("poc")
     id("me.2bab.bundletool")
 }
 
@@ -48,12 +49,10 @@ android {
         create("staging") {
             dimension = "server"
             applicationIdSuffix = ".staging"
-            versionNameSuffix = "-staging"
         }
         create("production") {
             dimension = "server"
             applicationIdSuffix = ".production"
-            versionNameSuffix = "-production"
             versionCode = 2
         }
     }
@@ -90,26 +89,50 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.0")
 }
 
+val pixel4aId = if (project.file("../local.properties").exists()) {
+    val p = Properties().apply { load(FileInputStream(project.file("../local.properties"))) }
+    p["pixel4a.id"].toString()
+} else {
+    ""
+}
+
 
 // Main configuration of the bundle-tool-gradle-plugin.
-// Run `./gradlew TransformApksFromBundleForProductionRelease` for testing all features.
+// Run `./gradlew TransformApksFromBundleForStagingDebug` for testing all features.
 bundleTool {
     // The plugin can be enabled by variant, for instance,
-    // BundleToolFeature.GET_SIZE feature is disabled for "debug" buildTypes,
+    // BundleToolFeature.GET_SIZE feature is disabled for "productionDebug" buildTypes,
+    // BundleToolFeature.INSTALL_APKS feature is enabled for "debug" buildTypes only,
     // while other combinations are supported/enabled.
     enableByVariant { variant, feature ->
-        !(variant.name.contains("debug", true) && feature == BundleToolFeature.GET_SIZE)
+        when(feature) {
+            BundleToolFeature.GET_SIZE -> {
+                !(variant.buildType == "debug" && variant.flavorName == "production")
+            }
+            BundleToolFeature.INSTALL_APKS -> {
+                variant.buildType == "debug"
+            }
+            else -> true
+        }
     }
 
+    // Each of them will create a work action with `build-apks` command
     buildApks {
         create("universal") {
             buildMode.set(ApkBuildMode.UNIVERSAL.name)
         }
         create("pixel4a") {
             deviceSpec.set(file("./pixel4a.json"))
+            // `deviceId` will be used for INSTALL_APKS feature only,
+            // set the `deviceId` to indicate that you want to install the apks after built
+            deviceId.set(pixel4aId)
+        }
+        create("pixel6") {
+            deviceSpec.set(file("./pixel6.json"))
         }
     }
 
+    // Each of them will create a work action for above "buildApks" list items' output
     getSize {
         create("all") {
             dimensions.addAll(
@@ -123,31 +146,25 @@ bundleTool {
 }
 
 
-// If you need to extend bundle-tool-gradle-plugin with all transformed ".apks" files,
-// please leverage the `outputDirProperty` from BundleToolTask.
 // Run `./gradlew UploadApksForStagingDebug` for testing.
 androidComponents {
     // Pls use the same rule as `enableByVariant{...}` over
     onVariants(selector().withBuildType("debug")) { variant ->
-        afterEvaluate {
-            val taskProvider = (tasks.named("TransformApksFromBundleFor${variant.name.capitalize()}")
-                    as TaskProvider<BundleToolTask>)
-            val outputDirProperty = taskProvider.flatMap { it.outputDirProperty }
-            tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
-                this.outputDirProperty.set(outputDirProperty)
-            }
+        tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
+            this.outputDirProperty.set(variant.getBundleToApksOutputDir())
         }
     }
 }
-abstract class UploadTask: DefaultTask() {
 
-    @org.gradle.api.tasks.InputDirectory
-    val outputDirProperty: DirectoryProperty = project.objects.directoryProperty()
+abstract class UploadTask : DefaultTask() {
+
+    @get:org.gradle.api.tasks.InputDirectory
+    abstract val outputDirProperty: DirectoryProperty
 
     @org.gradle.api.tasks.TaskAction
     fun upload() {
         outputDirProperty.get().asFile.listFiles().forEach { artifact ->
-            logger.lifecycle("Upload bundle-tool outputs: ${artifact.absolutePath}")
+            logger.lifecycle("Uploading bundle-tool outputs: ${artifact.absolutePath}")
             // upload(artifact)
         }
     }

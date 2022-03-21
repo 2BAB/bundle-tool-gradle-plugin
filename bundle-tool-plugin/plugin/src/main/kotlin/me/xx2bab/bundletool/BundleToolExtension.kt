@@ -2,7 +2,7 @@ package me.xx2bab.bundletool
 
 import org.gradle.api.NamedDomainObjectContainer
 
-abstract class BundleToolExtension: EnableByFeatureExtension<BundleToolFeature>() {
+abstract class BundleToolExtension : EnableByFeatureExtension<BundleToolFeature>() {
 
     abstract val buildApks: NamedDomainObjectContainer<BuildApksRule>
 
@@ -12,14 +12,23 @@ abstract class BundleToolExtension: EnableByFeatureExtension<BundleToolFeature>(
 
 enum class BundleToolFeature {
 
-    // It's currently a predecessor for GET_SIZE,
-    // and the first job that plugin does,
-    // disable it will cause the task registry got removed.
-    // The work action that transforms .aab to .apks using `build-apks` command.
+    /**
+     * It's currently a predecessor for GET_SIZE,
+     * and the first job that plugin does,
+     * disable it will cause the task registry got removed.
+     * The work action that transforms .aab to .apks using `build-apks` command.
+     */
     BUILD_APKS,
 
-    // The work action that gets the transformed .apks file size using `get-size total` command.
-    GET_SIZE
+    /**
+     * The work action that gets the transformed .apks file size using `get-size total` command.
+     */
+    GET_SIZE,
+
+    /**
+     * The work action that installs .apks generated from [BUILD_APKS]
+     */
+    INSTALL_APKS
 
 }
 

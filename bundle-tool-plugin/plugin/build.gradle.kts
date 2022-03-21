@@ -1,10 +1,8 @@
 plugins {
-    kotlin("jvm")
     id("java-gradle-plugin")
     `kotlin-dsl`
     `github-release`
     `maven-central-publish`
-    `functional-test-setup`
 }
 
 project.group = "me.2bab"

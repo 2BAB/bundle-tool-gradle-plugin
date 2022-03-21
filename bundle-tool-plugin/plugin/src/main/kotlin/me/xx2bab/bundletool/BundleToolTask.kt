@@ -6,6 +6,8 @@ import com.android.sdklib.BuildToolInfo
 import com.android.tools.build.bundletool.androidtools.Aapt2Command
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.commands.GetSizeCommand
+import com.android.tools.build.bundletool.commands.InstallApksCommand
+import com.android.tools.build.bundletool.device.DdmlibAdbServer
 import com.android.tools.build.bundletool.model.GetSizeRequest
 import com.android.tools.build.bundletool.model.Password
 import com.android.tools.build.bundletool.model.SigningConfiguration
@@ -13,6 +15,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -27,11 +30,11 @@ import javax.inject.Inject
 
 abstract class BundleToolTask : DefaultTask() {
 
-//    @get:Input
-//    abstract val enableBuildApksFeature: Boolean
-
     @get:Input
     var enableGetSizeFeature: Boolean = false
+
+    @get:Input
+    var enableInstallApksFeature: Boolean = false
 
     @get:Input
     abstract val projectName: Property<String>
@@ -60,16 +63,19 @@ abstract class BundleToolTask : DefaultTask() {
     @get:Internal
     abstract val buildToolInfo: Property<BuildToolInfo>
 
+    @get:Internal
+    abstract val adbFileProvider: RegularFileProperty
+
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
 
     @TaskAction
     fun transform() {
         val outDir = outputDirProperty.get().asFile
-        val fileNameSuffix = "-${versionName.get()}"
+        val fileNameSuffix = "-${variantName.get()}-${versionName.get()}"
 
         // Put a copy of final aab to our /bundletool directory
-        val inputAabFile = File(outDir, "${projectName.get()}$fileNameSuffix.aab")
+        val inputAabFile = File(outDir, "${projectName.get()}-final-bundle$fileNameSuffix.aab")
         if (inputAabFile.exists()) {
             inputAabFile.delete()
         }
@@ -96,18 +102,18 @@ abstract class BundleToolTask : DefaultTask() {
                 storePass = signature?.storePassword
                 storeFile = signature?.storeFile
                 overwriteOutput = rule.overwriteOutput.orNull
-                connectedDevice = rule.connectedDevice.orNull
+//                connectedDevice = rule.connectedDevice.orNull
                 localTestingMode = rule.localTestingMode.orNull
                 buildMode = if (rule.buildMode.isPresent && rule.buildMode.get().isNotBlank()) {
                     rule.buildMode.get()
                 } else {
                     null
                 }
-                deviceId = if (rule.deviceId.isPresent && rule.deviceId.get().isNotBlank()) {
-                    rule.deviceId.get()
-                } else {
-                    null
-                }
+//                deviceId = if (rule.deviceId.isPresent && rule.deviceId.get().isNotBlank()) {
+//                    rule.deviceId.get()
+//                } else {
+//                    null
+//                }
                 deviceSpecFile =
                     if (rule.deviceSpec.isPresent
                         && rule.deviceSpec.get().absolutePath.isNotBlank()
@@ -117,47 +123,71 @@ abstract class BundleToolTask : DefaultTask() {
                     } else {
                         null
                     }
-                buildApksOutputs.add(BuildApksOutput(this.outputApks, this.deviceSpecFile))
+                buildApksOutputs.add(
+                    BuildApksOutput(
+                        this.outputApks,
+                        this.deviceSpecFile,
+                        rule.deviceId.get()
+                    )
+                )
             }
         }
         workQueue.await()
 
         // For GetSizeCommand
-        if (!enableGetSizeFeature) return
-        buildApksOutputs.forEach { buildApksOutput ->
-            getSizeRules?.forEach { getSizeRule ->
-                workQueue.submit(GetSizeWorkAction::class.java) {
-                    inputApks = buildApksOutput.outputApks
-                    outputCsv =
-                        File(outDir, "${buildApksOutput.outputApks.nameWithoutExtension}-size.csv")
-                    deviceSpecFile = buildApksOutput.deviceSpecFile
-                    dimensions = if (getSizeRule.dimensions.isPresent
-                        && getSizeRule.dimensions.get().isNotEmpty()
-                    ) {
-                        getSizeRule.dimensions.get()
-                    } else {
-                        setOf()
+        if (enableGetSizeFeature) {
+            buildApksOutputs.forEach { buildApksOutput ->
+                getSizeRules?.forEach { getSizeRule ->
+                    workQueue.submit(GetSizeWorkAction::class.java) {
+                        inputApks = buildApksOutput.outputApks
+                        outputCsv =
+                            File(
+                                outDir,
+                                "${buildApksOutput.outputApks.nameWithoutExtension}-size.csv"
+                            )
+                        deviceSpecFile = buildApksOutput.deviceSpecFile
+                        dimensions = if (getSizeRule.dimensions.isPresent
+                            && getSizeRule.dimensions.get().isNotEmpty()
+                        ) {
+                            getSizeRule.dimensions.get()
+                        } else {
+                            setOf()
+                        }
+                        isInstant = getSizeRule.instant.orNull
+                        modules = if (getSizeRule.modules.isPresent
+                            && getSizeRule.modules.get().isNotBlank()
+                        ) {
+                            getSizeRule.modules.get()
+                        } else {
+                            null
+                        }
                     }
-                    isInstant = getSizeRule.instant.orNull
-                    modules = if (getSizeRule.modules.isPresent
-                        && getSizeRule.modules.get().isNotBlank()
-                    ) {
-                        getSizeRule.modules.get()
-                    } else {
-                        null
-                    }
-                }
 
+                }
             }
         }
         workQueue.await()
+
+        if (enableInstallApksFeature) {
+            buildApksOutputs.forEach { buildApksOutput ->
+                if (!buildApksOutput.deviceId.isNullOrBlank()) {
+                    workQueue.submit(InstallApksWorkAction::class.java) {
+                        outputApks = buildApksOutput.outputApks
+                        deviceId = buildApksOutput.deviceId
+                        adb = adbFileProvider.get().asFile
+                        aapt2 = aapt2File
+                    }
+                }
+            }
+        }
     }
 }
 
 
 private data class BuildApksOutput(
     val outputApks: File,
-    val deviceSpecFile: File?
+    val deviceSpecFile: File?,
+    val deviceId: String?
 )
 
 private interface BuildApksWorkParam : WorkParameters {
@@ -183,6 +213,11 @@ private interface BuildApksWorkParam : WorkParameters {
 
 private abstract class BuildApksWorkAction : WorkAction<BuildApksWorkParam> {
 
+    // The Logger is not yet supported to be a build service injected by built-in DI.
+    // https://github.com/gradle/gradle/issues/16991
+    // Use below trick as a workaround.
+    private val logger = Logging.getLogger(BundleToolTask::class.java)
+
     override fun execute() {
         parameters.outputApks.let { if (it.exists()) it.delete() }
         val commandBuilder = BuildApksCommand.builder().apply {
@@ -203,10 +238,17 @@ private abstract class BuildApksWorkAction : WorkAction<BuildApksWorkParam> {
             parameters.connectedDevice?.let { setGenerateOnlyForConnectedDevice(it) }
             parameters.localTestingMode?.let { setLocalTestingMode(it) }
             parameters.buildMode?.let { setApkBuildMode(BuildApksCommand.ApkBuildMode.valueOf(it)) }
-            parameters.deviceId?.let { setDeviceId(it) }
+            parameters.deviceId?.let {
+                val conn = parameters.connectedDevice == null || parameters.connectedDevice!!
+                if (conn) {
+                    setDeviceId(it)
+                }
+            }
             parameters.deviceSpecFile?.let { setDeviceSpec(it.toPath()) }
         }
         commandBuilder.build().execute()
+        logger.lifecycle("BuildApks command executed successfully, " +
+                "generated ${parameters.outputApks.absolutePath}.")
 
         // Special case for extracting universal apk from apks
         if (parameters.buildMode != null
@@ -293,6 +335,38 @@ private abstract class GetSizeWorkAction : WorkAction<GetSizeWorkParam> {
         parameters.outputCsv.createNewFile()
         getSizeCommandBuilder.build()
             .getSizeTotal(PrintStream(parameters.outputCsv.outputStream()))
+    }
+
+}
+
+private interface InstallApksWorkParam : WorkParameters {
+    // Mandatory
+    var outputApks: File
+
+    // Internal
+    var aapt2: File?
+    var adb: File
+
+    // External
+    var deviceId: String
+}
+
+private abstract class InstallApksWorkAction : WorkAction<InstallApksWorkParam> {
+
+    private val logger = Logging.getLogger(BundleToolTask::class.java)
+
+    override fun execute() {
+        try {
+            InstallApksCommand.builder().apply {
+                setDeviceId(parameters.deviceId)
+                setAdbPath(parameters.adb.toPath())
+                setAdbServer(DdmlibAdbServer.getInstance())
+                setApksArchivePath(parameters.outputApks.toPath())
+            }.build().execute()
+            logger.lifecycle("Installation of ${parameters.outputApks.absolutePath} for ${parameters.deviceId} was successful.")
+        } catch (e: Exception) {
+            logger.warn("Installation of ${parameters.outputApks.absolutePath} for ${parameters.deviceId} was failed. ${e.message}")
+        }
     }
 
 }
