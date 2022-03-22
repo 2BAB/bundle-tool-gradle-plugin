@@ -7,9 +7,10 @@
 A Gradle Plugin for Android BundleTool, powered by [Polyfill](https://github.com/2BAB/Polyfill). It supports:
 
 1. Generate **".apks"** artifacts by `build-apks` command.
-2. Calculate **".apks"** size by `get-size total` command and export to **".csv"** files.
-3. When running `build-apks` command in Universal build mode, it also extracts universal **".apk"** artifact.
-4. The plugin features can be enabled/disabled for per variant respectively.
+2. Install **".apks"** artifacts by `install-apks` command.
+3. Calculate **".apks"** size by `get-size total` command and export to **".csv"** files.
+4. When running `build-apks` command in Universal build mode, it also extracts universal **".apk"** artifact.
+5. The plugin features can be enabled/disabled for per variant respectively.
 
 ## Usage
 
@@ -60,7 +61,7 @@ bundleTool {
         }
     }
 
-    // Each of them will create a work action with `build-apks` command
+    // Each of them will create a work action with `build-apks` command.
     buildApks {
         create("universal") {
             buildMode.set(ApkBuildMode.UNIVERSAL.name)
@@ -68,7 +69,7 @@ bundleTool {
         create("pixel4a") {
             deviceSpec.set(file("./pixel4a.json"))
             // `deviceId` will be used for INSTALL_APKS feature only,
-            // set the `deviceId` to indicate that you want to install the apks after built
+            // set the `deviceId` to indicate that you want to install the apks after built.
             deviceId.set(pixel4aId)
         }
         create("pixel6") {
@@ -76,7 +77,7 @@ bundleTool {
         }
     }
     
-    // Each of them will create a work action for above "buildApks" list items' output
+    // Each of them will create a work action for above "buildApks" list items' output.
     getSize {
         create("all") {
             dimensions.addAll(
