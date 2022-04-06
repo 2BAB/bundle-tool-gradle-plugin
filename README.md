@@ -4,7 +4,7 @@
 [![Actions Status](https://github.com/2bab/bundle-tool-gradle-plugin/workflows/CI/badge.svg)](https://github.com/2bab/bundle-tool-gradle-plugin/actions)
 [![Apache 2](https://img.shields.io/badge/License-Apache%202-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-A Gradle Plugin for Android BundleTool, powered by [Polyfill](https://github.com/2BAB/Polyfill). It supports:
+A Gradle Plugin for Android BundleTool, powered by [New Variant/Artifact API](https://developer.android.com/studio/build/extend-agp) & [Polyfill](https://github.com/2BAB/Polyfill). It supports:
 
 1. Generate **".apks"** artifacts by `build-apks` command.
 2. Install **".apks"** artifacts by `install-apks` command.
@@ -148,7 +148,7 @@ Check this [link](https://medium.com/walmartlabs/check-out-these-5-git-tips-befo
 So far we haven't added any hook tool, but follow a regex rule like below:
 
 ```
-(chore|feat|docs|fix|refactor|style|test|hack|release)(:)( )(.{0,80})
+(chore|feature|clean|upgrade|docs|fix|refactor|style|test|hack|release)(:)( )(.{0,80})
 ```
 
 ## License
