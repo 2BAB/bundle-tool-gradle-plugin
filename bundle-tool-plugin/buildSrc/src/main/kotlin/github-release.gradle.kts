@@ -31,30 +31,37 @@ val repo = "bundle-tool-gradle-plugin"
 val tagBranch = "main"
 val version = BuildConfig.Versions.pluginVersion
 val releaseNotes = ""
-createGithubReleaseTaskInternal(artifacts, token, repo, tagBranch, version, releaseNotes)
+createGithubReleaseTaskInternal(token, repo, tagBranch, version, releaseNotes)
 
 
-fun createGithubReleaseTaskInternal(artifacts: DirectoryProperty,
-                                    token: String,
-                                    repo: String,
-                                    tagBranch: String,
-                                    version: String,
-                                    releaseNotes: String): TaskProvider<GithubReleaseTask> {
-    return project.tasks.register<GithubReleaseTask>("releaseArtifactsToGithub") {
-        setAuthorization("Token $token")
-        setOwner("2bab")
-        setRepo(repo)
-        setTagName(version)
-        setTargetCommitish(tagBranch)
-        setReleaseName(version)
-        setBody(releaseNotes)
-        setDraft(false)
-        setPrerelease(false)
-        setReleaseAssets(artifacts)
-        setOverwrite(true)
-        setAllowUploadToExisting(true)
-        setApiEndpoint("https://api.github.com")
-        setDryRun(false)
+fun createGithubReleaseTaskInternal(
+    token: String,
+    repo: String,
+    tagBranch: String,
+    version: String,
+    releaseNotes: String
+): TaskProvider<GithubReleaseTask> {
+    return project.tasks.register<GithubReleaseTask>(taskName) {
+        authorization.set("Token $token")
+        owner.set("2bab")
+        this.repo.set(repo)
+        tagName.set(version)
+        targetCommitish.set(tagBranch)
+        releaseName.set("v${version}")
+        body.set(releaseNotes)
+        draft.set(false)
+        prerelease.set(false)
+        overwrite.set(true)
+        allowUploadToExisting.set(true)
+        apiEndpoint.set("https://api.github.com")
+        dryRun.set(false)
+        generateReleaseNotes.set(false)
+        releaseAssets.from(
+            tasks.getByName<Jar>("jar").archiveFile, // seal-${version}.jar
+            tasks.getByName<Jar>("sourcesJar").archiveFile, // seal-${version}-sources.jar
+            tasks.getByName<Jar>("javadocJar").archiveFile, // seal-${version}-javadoc.jar
+            //tasks.getByName<Sign>("signPluginMavenPublication").outputs, // seal-${version}-asc.jar, seal-${version}-sources-asc.jar, seal-${version}-sources-asc.jar,
+        )
     }
 }
 
