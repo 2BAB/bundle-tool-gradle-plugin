@@ -29,9 +29,6 @@ if (secretPropsFile.exists()) {
     ext["ossrh.username"] = System.getenv("OSSRH_USERNAME")
     ext["ossrh.password"] = System.getenv("OSSRH_PASSWORD")
 }
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
 fun getExtraString(name: String) = ext[name]?.toString()
 
 
@@ -55,7 +52,6 @@ publishing {
 
     publications {
         create<MavenPublication>("BTPlugin") {
-            artifact(javadocJar.get())
             from(components["java"])
             pom {
                 // Description
