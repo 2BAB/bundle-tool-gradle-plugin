@@ -1,6 +1,7 @@
 import me.xx2bab.bundletool.*
 import java.util.Properties
 import java.io.FileInputStream
+import java.util.Locale
 
 plugins {
     id("com.android.application")
@@ -153,7 +154,11 @@ androidComponents {
     // Pls use the same rule as `enableByVariant{...}` over
     onVariants(selector().withBuildType("debug")) { variant ->
         tasks.register<UploadTask>(
-            "UploadApksFor${variant.name.capitalize()}") {
+            "UploadApksFor${variant.name.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(
+                    Locale.getDefault()
+                ) else it.toString()
+            }}") {
             uploadDir.set(variant.getBundleToApksOutputDir())
         }
     }
