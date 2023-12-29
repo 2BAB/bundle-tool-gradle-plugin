@@ -56,7 +56,11 @@ class BundleToolPlugin : Plugin<Project> {
             val featureGetSize = config.isFeatureEnabled(variant, BundleToolFeature.GET_SIZE)
             val featureInstallApks = config.isFeatureEnabled(variant, BundleToolFeature.INSTALL_APKS)
             val versionName = variant.outputs[0].versionName
-            val variantName = variant.name.capitalize(Locale.ROOT)
+            val variantName = variant.name.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(
+                    Locale.ROOT
+                ) else it.toString()
+            }
             val finalBundle = variant.artifacts.get(SingleArtifact.BUNDLE)
 
             val buildApksTaskProvider = project.tasks.register<BundleToolTask>(
@@ -65,7 +69,7 @@ class BundleToolPlugin : Plugin<Project> {
                 enableGetSizeFeature = featureGetSize
                 enableInstallApksFeature = featureInstallApks
                 projectName.set(project.name)
-                this.variantName.set(variant.name.toLowerCase(Locale.ROOT))
+                this.variantName.set(variant.name.lowercase(Locale.ROOT))
                 this.versionName.set(versionName)
                 finalBundleProperty.set(finalBundle)
                 signingConfigData = SigningConfigDataProvider.create(
