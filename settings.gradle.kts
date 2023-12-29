@@ -1,5 +1,3 @@
-enableFeaturePreview("VERSION_CATALOGS")
-
 pluginManagement {
     val versions = file("deps.versions.toml").readText()
     val regexPlaceHolder = "%s\\s\\=\\s\\\"([A-Za-z0-9\\.\\-]+)\\\""
@@ -48,3 +46,4 @@ includeBuild("bundle-tool-plugin"){
             .using(project(":plugin"))
     }
 }
+

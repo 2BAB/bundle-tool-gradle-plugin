@@ -180,6 +180,7 @@ abstract class BundleToolTask : DefaultTask() {
                 }
             }
         }
+        workQueue.await()
     }
 }
 
@@ -219,47 +220,48 @@ private abstract class BuildApksWorkAction : WorkAction<BuildApksWorkParam> {
     private val logger = Logging.getLogger(BundleToolTask::class.java)
 
     override fun execute() {
-        parameters.outputApks.let { if (it.exists()) it.delete() }
+        val p = parameters
+        p.outputApks.let { if (it.exists()) it.delete() }
         val commandBuilder = BuildApksCommand.builder().apply {
-            setBundlePath(parameters.inputAab.toPath())
-            setOutputFile(parameters.outputApks.toPath())
+            setBundlePath(p.inputAab.toPath())
+            setOutputFile(p.outputApks.toPath())
 
-            parameters.aapt2?.let { setAapt2Command(Aapt2Command.createFromExecutablePath(it.toPath())) }
-            parameters.storeFile?.let {
+            p.aapt2?.let { setAapt2Command(Aapt2Command.createFromExecutablePath(it.toPath())) }
+            p.storeFile?.let {
                 setSigningConfiguration2(
                     keystoreFile = it,
-                    keystorePassword = parameters.storePass,
-                    keyAlias = parameters.keyAlias,
-                    keyPassword = parameters.keyPass
+                    keystorePassword = p.storePass,
+                    keyAlias = p.keyAlias,
+                    keyPassword = p.keyPass
                 )
             }
 
-            parameters.overwriteOutput?.let { setOverwriteOutput(it) }
-            parameters.connectedDevice?.let { setGenerateOnlyForConnectedDevice(it) }
-            parameters.localTestingMode?.let { setLocalTestingMode(it) }
-            parameters.buildMode?.let { setApkBuildMode(BuildApksCommand.ApkBuildMode.valueOf(it)) }
-            parameters.deviceId?.let {
-                val conn = parameters.connectedDevice == null || parameters.connectedDevice!!
+            p.overwriteOutput?.let { setOverwriteOutput(it) }
+            p.connectedDevice?.let { setGenerateOnlyForConnectedDevice(it) }
+            p.localTestingMode?.let { setLocalTestingMode(it) }
+            p.buildMode?.let { setApkBuildMode(BuildApksCommand.ApkBuildMode.valueOf(it)) }
+            p.deviceId?.let {
+                val conn = p.connectedDevice == null || p.connectedDevice!!
                 if (conn) {
                     setDeviceId(it)
                 }
             }
-            parameters.deviceSpecFile?.let { setDeviceSpec(it.toPath()) }
+            p.deviceSpecFile?.let { setDeviceSpec(it.toPath()) }
         }
         commandBuilder.build().execute()
         logger.lifecycle("BuildApks command executed successfully, " +
-                "generated ${parameters.outputApks.absolutePath}.")
+                "generated ${p.outputApks.absolutePath}.")
 
         // Special case for extracting universal apk from apks
-        if (parameters.buildMode != null
-            && parameters.buildMode == ApkBuildMode.UNIVERSAL.name
+        if (p.buildMode != null
+            && p.buildMode == ApkBuildMode.UNIVERSAL.name
         ) {
             val universalApk = File(
-                parameters.outputApks.parentFile,
+                p.outputApks.parentFile,
                 parameters.outputApks.name.dropLast(1)
             )
             extractFileByExtensionFromZip(
-                parameters.outputApks,
+                p.outputApks,
                 "apk",
                 universalApk
             )

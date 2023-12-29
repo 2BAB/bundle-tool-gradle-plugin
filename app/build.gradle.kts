@@ -1,6 +1,7 @@
 import me.xx2bab.bundletool.*
 import java.util.Properties
 import java.io.FileInputStream
+import java.util.Locale
 
 plugins {
     id("com.android.application")
@@ -9,12 +10,12 @@ plugins {
 }
 
 android {
-    compileSdk = 31
-
+    compileSdk = 34
+    namespace = "me.xx2bab.sample.bundle"
     defaultConfig {
         applicationId = "me.xx2bab.sample.bundle"
         minSdk = 28
-        targetSdk = 31
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -77,10 +78,10 @@ android {
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
@@ -141,6 +142,8 @@ bundleTool {
                 GetSizeDimension.SCREEN_DENSITY.name,
                 GetSizeDimension.LANGUAGE.name
             )
+            modules.set("")
+            instant.set(false)
         }
     }
 }
@@ -150,8 +153,13 @@ bundleTool {
 androidComponents {
     // Pls use the same rule as `enableByVariant{...}` over
     onVariants(selector().withBuildType("debug")) { variant ->
-        tasks.register<UploadTask>("UploadApksFor${variant.name.capitalize()}") {
-            this.outputDirProperty.set(variant.getBundleToApksOutputDir())
+        tasks.register<UploadTask>(
+            "UploadApksFor${variant.name.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(
+                    Locale.getDefault()
+                ) else it.toString()
+            }}") {
+            uploadDir.set(variant.getBundleToApksOutputDir())
         }
     }
 }
@@ -159,11 +167,11 @@ androidComponents {
 abstract class UploadTask : DefaultTask() {
 
     @get:org.gradle.api.tasks.InputDirectory
-    abstract val outputDirProperty: DirectoryProperty
+    abstract val uploadDir: DirectoryProperty
 
     @org.gradle.api.tasks.TaskAction
     fun upload() {
-        outputDirProperty.get().asFile.listFiles().forEach { artifact ->
+        uploadDir.get().asFile.listFiles().forEach { artifact ->
             logger.lifecycle("Uploading bundle-tool outputs: ${artifact.absolutePath}")
             // upload(artifact)
         }

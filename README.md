@@ -23,8 +23,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.1.2")
-        classpath("me.2bab:bundle-tool-plugin:1.2.0")
+        classpath("com.android.tools.build:gradle:8.1.2")
+        classpath("me.2bab:bundle-tool-plugin:1.3.0")
     }
 }
 ```
@@ -136,10 +136,16 @@ abstract class UploadTask : DefaultTask() {
 
 bundle-tool-gradle-plugin is only supported & tested on LATEST 2 Minor versions of Android Gradle Plugin.
 
-| AGP   | BundleTool | bundle-tool-gradle-plugin |
-|-------|------------|---------------------------|
-| 7.1.x | 1.8.0      | 1.2.0                     |
-| 7.0.x | 1.6.0      | 1.1.0                     |
+| AGP    | BundleTool | bundle-tool-gradle-plugin |
+|--------|------------|---------------------------|
+| 8.1.x  | 1.14.0     | 1.3.0                     |
+| 7.1.x  | 1.8.0      | 1.2.0                     |
+| 7.0.x  | 1.6.0      | 1.1.0                     |
+
+Tips:
+
+1. How to swiftly find the companion BundleTool version from AGP: create/open a vanilla Android project, take a look at the *External Libraries* -> *Gradle Script dependencies* -> you will see something like *builder-8.1.2-sources.jar* & *bundletool-1.14.0.jar*, which means the AGP 8.1.2 uses the BundleTool 1.14.0.  
+2. How to determine the BundleTool features' compatibility: check the [`VersionGuardedFeature`](https://github.com/google/bundletool/blob/0b00e4a8d3129cdfa2a98119fe7a3373ff49cdd3/src/main/java/com/android/tools/build/bundletool/model/version/VersionGuardedFeature.java) Enumeration file.
 
 ## Git Commit Check
 
