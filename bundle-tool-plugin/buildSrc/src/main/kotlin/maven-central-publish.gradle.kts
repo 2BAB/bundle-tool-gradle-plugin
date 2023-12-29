@@ -1,8 +1,7 @@
-plugins{
+plugins {
     `maven-publish`
     signing
 }
-
 
 // Stub secrets to let the project sync and build without the publication values set up
 ext["signing.keyId"] = null
@@ -49,22 +48,44 @@ val username = "2BAB"
 
 
 publishing {
+    // Configure MavenCentral repository
+    repositories {
+        maven {
+            name = "sonatype"
+            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = getExtraString("ossrh.username")
+                password = getExtraString("ossrh.password")
+            }
+        }
+    }
 
-    publications {
-        create<MavenPublication>("BTPlugin") {
-            from(components["java"])
+    // Configure MavenLocal repository
+    repositories {
+        maven {
+            name = "myMavenlocal"
+            url = uri(System.getProperty("user.home") + "/.m2/repository")
+        }
+    }
+}
+
+afterEvaluate {
+    publishing.publications.all {
+        signing.sign(this)
+        val publicationName = this.name
+        (this as MavenPublication).apply {
+            if (publicationName == "pluginMaven") {
+                groupId = groupName
+                artifactId = projectName
+            }
+            version = BuildConfig.Versions.pluginVersion
             pom {
-                // Description
-                name.set(projectName)
+                if (publicationName == "pluginMaven") {
+                    name.set(project.name)
+                }
                 description.set(mavenDesc)
                 url.set(siteUrl)
 
-                // Archive
-                groupId = groupName
-                artifactId = projectName
-                version = BuildConfig.Versions.pluginVersion
-
-                // License
                 inceptionYear.set(inception)
                 licenses {
                     licenseNames.forEachIndexed { ln, li ->
@@ -87,28 +108,4 @@ publishing {
             }
         }
     }
-
-    // Configure MavenCentral repository
-    repositories {
-        maven {
-            name = "sonatype"
-            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = getExtraString("ossrh.username")
-                password = getExtraString("ossrh.password")
-            }
-        }
-    }
-
-    // Configure MavenLocal repository
-    repositories {
-        maven {
-            name = "myMavenlocal"
-            url = uri(System.getProperty("user.home") + "/.m2/repository")
-        }
-    }
-}
-
-signing {
-    sign(publishing.publications)
 }

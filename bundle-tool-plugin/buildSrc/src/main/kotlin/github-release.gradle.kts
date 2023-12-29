@@ -1,19 +1,7 @@
 import com.github.breadmoirai.githubreleaseplugin.GithubReleaseTask
 import java.util.*
 
-val libs = File(project.buildDir.absoluteFile, "libs")
 val taskName = "releaseArtifactsToGithub"
-val artifacts: DirectoryProperty = project.objects.directoryProperty()
-artifacts.set(libs)
-
-// Temporary workaround for directory is not recognized by ReleaseAssets
-gradle.taskGraph.whenReady {
-    beforeTask {
-        if (this is GithubReleaseTask) {
-            this.setReleaseAssets(libs.listFiles())
-        }
-    }
-}
 
 val tokenFromEnv: String? = System.getenv("GH_DEV_TOKEN")
 val token: String = if (!tokenFromEnv.isNullOrBlank()) {
