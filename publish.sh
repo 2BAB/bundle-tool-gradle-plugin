@@ -1,1 +1,1 @@
-./gradlew clean :bundle-tool-plugin:plugin:publishBTPluginPublicationToSonatypeRepository :bundle-tool-plugin:plugin:releaseArtifactsToGithub
+./gradlew clean :bundle-tool-plugin:plugin:publishAllPublicationsToSonatypeRepository :bundle-tool-plugin:plugin:releaseArtifactsToGithub
