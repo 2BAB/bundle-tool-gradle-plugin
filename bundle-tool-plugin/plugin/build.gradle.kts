@@ -28,6 +28,7 @@ gradlePlugin {
         create("bundle-tool-plugin") {
             id = "me.2bab.bundletool"
             implementationClass = "me.xx2bab.bundletool.BundleToolPlugin"
+            displayName = "me.2bab.bundletool"
         }
     }
 }

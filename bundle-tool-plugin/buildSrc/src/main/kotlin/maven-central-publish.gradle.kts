@@ -81,7 +81,7 @@ afterEvaluate {
             version = BuildConfig.Versions.pluginVersion
             pom {
                 if (publicationName == "pluginMaven") {
-                    name.set(project.name)
+                    name.set(projectName)
                 }
                 description.set(mavenDesc)
                 url.set(siteUrl)
